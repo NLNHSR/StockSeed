@@ -49,6 +49,7 @@ def plot_graph(random_graph, stock_data):
         y=alt.Y('Price', title='Closing Price ($)', scale=alt.Scale(zero=False)),
         color=alt.Color('Category', scale=color_scale, legend=alt.Legend(title="Legend")),
     ).properties(width=700, height=400).configure_axis(
+        gridColor='#8A9A5B4D',
         labelFontSize=12,
         titleFontSize=14,
         labelColor='white',
@@ -92,6 +93,7 @@ if extend:
         st.write("Please generate the best random graph first.")
 
         
+st.write("#")
 st.write("#")
 with st.expander("How it works"):
     st.write("""
