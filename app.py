@@ -32,6 +32,35 @@ with col1:
 with col2:
     extend = st.button("Extend Graph", use_container_width=True)
 
+
+def plot_graph(random_graph, stock_data):
+    df = pd.DataFrame({
+        'Random Graph': random_graph,
+        'Stock Data': stock_data
+    })
+
+    df['Day'] = df.index
+    df = df.melt('Day', var_name='Category', value_name='Price')
+
+    color_scale = alt.Scale(domain=['Random Graph', 'Stock Data'], range=['#4CBB17', '#FFFFFF'])
+
+    chart = alt.Chart(df).mark_line().encode(
+        x=alt.X('Day', title='# Days From Start Of Stock Period'),
+        y=alt.Y('Price', title='Closing Price ($)', scale=alt.Scale(zero=False)),
+        color=alt.Color('Category', scale=color_scale, legend=alt.Legend(title="Legend")),
+    ).properties(width=700, height=400).configure_axis(
+        labelFontSize=12,
+        titleFontSize=14,
+        labelColor='white',
+        titleColor='white'
+    ).configure_legend(
+        titleColor='white',
+        labelColor='white'
+    )
+
+    st.altair_chart(chart)
+
+
 if generate:
     stock_data = fetch_stock_data(ticker, stock_period)
     
@@ -40,28 +69,7 @@ if generate:
     
     st.write(f"Best seed: {seeds[best_index]}")
     
-    df = pd.DataFrame({
-        'Random Graph': graphs[best_index],
-        'Stock Data': stock_data
-    })
-
-    df['Day'] = df.index
-    base = alt.Chart(df.reset_index()).mark_line().encode(x='Day')
-    random_graph_line = base.encode(
-        y=alt.Y('Random Graph', scale=alt.Scale(zero=False)),
-        color=alt.value('#4CBB17')
-    ).properties( width=800, height=400 )
-
-    stock_data_line = base.encode(
-        y=alt.Y('Stock Data', scale=alt.Scale(zero=False)),
-        color=alt.value('white')
-    ).properties( width=800, height=400 )
-
-    chart = alt.layer(random_graph_line, stock_data_line).resolve_scale(
-        y='shared'
-    ).configure_axis(labelFontSize=12, titleFontSize=14)
-
-    st.altair_chart(chart)
+    plot_graph(graphs[best_index], stock_data)
     
     st.session_state['stock_data'] = stock_data
     st.session_state['best_seed'] = seeds[best_index]
@@ -77,28 +85,19 @@ if extend:
         stock_data = np.concatenate([stock_data, [np.nan]*num_extend])
         
         st.write(f"Extending graph with seed: {best_seed}")
-        df = pd.DataFrame({ 
-            'Random Graph': best_graph,
-            'Stock Data': stock_data
-        })
         
-        df['Day'] = df.index
-        base = alt.Chart(df.reset_index()).mark_line().encode(x='Day')
-        random_graph_line = base.encode(
-            y=alt.Y('Random Graph', scale=alt.Scale(zero=False)),
-            color=alt.value('#4CBB17')
-        ).properties( width=800, height=400 )
-
-        stock_data_line = base.encode(
-            y=alt.Y('Stock Data', scale=alt.Scale(zero=False)),
-            color=alt.value('white')
-        ).properties( width=800, height=400 )
-
-        chart = alt.layer(random_graph_line, stock_data_line).resolve_scale(
-            y='shared'
-        ).configure_axis(labelFontSize=12, titleFontSize=14)
-
-        st.altair_chart(chart)
+        plot_graph(best_graph, stock_data)
         
     else:
         st.write("Please generate the best random graph first.")
+
+        
+st.write("#")
+with st.expander("How it works"):
+    st.write("""
+            StockSeed generates multiple random stock price graphs and compares them to historical stock data to find the closest match using Euclidean distance. 
+            Enter a stock ticker and adjust parameters like volatility, mean return, number of graphs, extension days, and data period. 
+            StockSeed fetches historical prices, generates random graphs using a random walk process with specified mean and volatility, 
+            and identifies the graph that most closely matches the historical data. The matching graph is displayed overlaid with the historical data, 
+            and you can extend it further using the same random seed. This tool provides an interactive way to visualize and extend randomly generated stock trends.
+            """)
