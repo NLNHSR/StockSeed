@@ -16,10 +16,11 @@ st.markdown("<h2 style='text-align: center; color: #4CBB17; font-size: 18px'>Har
 ticker = st.text_input('Enter Stock Ticker Symbol', 'AAPL')
 st.expander("Additional Parameters", expanded=False)
 with st.expander("Additional Parameters"):
-    std = st.slider('Standard Deviation', min_value=0.0001, max_value=0.2, value=0.02, step=0.01)
-    mean = st.slider('Mean', min_value=0.0, max_value=0.5, value=0.0, step=0.01)
-    num_graphs = st.slider('Number of Random Graphs', min_value=100, max_value=10000, value=1000, step=100)
-    num_extend = st.slider('Number of Days to Extend', min_value=1, max_value=365, value=30, step=1)
+    std = st.slider('Standard Deviation:', min_value=0.0001, max_value=0.2, value=0.02, step=0.01)
+    mean = st.slider('Mean:', min_value=0.0, max_value=0.5, value=0.0, step=0.01)
+    num_graphs = st.slider('Number of Random Graphs:', min_value=100, max_value=10000, value=1000, step=100)
+    num_extend = st.slider('Number of Days to Extend:', min_value=1, max_value=365, value=30, step=1)
+    stock_period = st.selectbox('Stock history:', ("1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"),index=5)
 
 col1, col2 = st.columns([1,1]) 
 generate = False
@@ -32,7 +33,7 @@ with col2:
     extend = st.button("Extend Graph", use_container_width=True)
 
 if generate:
-    stock_data = fetch_stock_data(ticker)
+    stock_data = fetch_stock_data(ticker, stock_period)
     
     graphs, seeds = generate_multiple_random_graphs(num_graphs=num_graphs, num_days=len(stock_data), initial_price=stock_data[0], mean=mean, std_dev=std)
     best_index = similarity_score(stock_data, graphs)
@@ -68,7 +69,6 @@ if generate:
     
 if extend:
     if 'stock_data' in st.session_state and 'best_seed' in st.session_state and 'best_graph' in st.session_state:
-        # Access stored data
         stock_data = st.session_state['stock_data']
         best_seed = st.session_state['best_seed']
         best_graph = st.session_state['best_graph']
